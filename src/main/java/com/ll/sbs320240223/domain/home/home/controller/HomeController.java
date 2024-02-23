@@ -19,6 +19,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HomeController {
     private final AmazonS3 amazonS3;
+    private static final String BUCKET_NAME = "dev-bucket-jhs512-1";
+    private static final String REGION = "ap-northeast-2";
+
+    public static String getS3FileUrl(String fileName) {
+        return "https://" + BUCKET_NAME + ".s3." + REGION + ".amazonaws.com/" + fileName;
+    }
 
     @GetMapping("/")
     public List<String> listBuckets() {
@@ -52,8 +58,8 @@ public class HomeController {
 
         // PutObjectRequest 객체 생성
         PutObjectRequest putObjectRequest = new PutObjectRequest(
-                "dev-bucket-jhs512-1",
-                "test/" + file.getOriginalFilename(),
+                BUCKET_NAME,
+                "img1/" + file.getOriginalFilename(),
                 file.getInputStream(),
                 objectMetadata
         );
@@ -61,7 +67,11 @@ public class HomeController {
         // Amazon S3에 파일 업로드
         amazonS3.putObject(putObjectRequest);
 
-        return "Upload Success";
+        return """
+                <img src="%s">
+                <hr>
+                <div>업로드 완료</div>
+                """.formatted(getS3FileUrl("img1/" + file.getOriginalFilename()));
     }
 }
 
