@@ -21,6 +21,7 @@ public class HomeController {
     private final AmazonS3 amazonS3;
     private static final String BUCKET_NAME = "dev-bucket-jhs512-1";
     private static final String REGION = "ap-northeast-2";
+    private static final String IMG_DIR_NAME = "img1";
 
     public static String getS3FileUrl(String fileName) {
         return "https://" + BUCKET_NAME + ".s3." + REGION + ".amazonaws.com/" + fileName;
@@ -47,7 +48,7 @@ public class HomeController {
 
     @PostMapping("/upload")
     @ResponseBody
-    public String showUpload(
+    public String upload(
             MultipartFile file
     ) throws IOException {
         // 파일을 S3에 업로드합니다.
@@ -59,7 +60,7 @@ public class HomeController {
         // PutObjectRequest 객체 생성
         PutObjectRequest putObjectRequest = new PutObjectRequest(
                 BUCKET_NAME,
-                "img1/" + file.getOriginalFilename(),
+                IMG_DIR_NAME + "/" + file.getOriginalFilename(),
                 file.getInputStream(),
                 objectMetadata
         );
@@ -71,7 +72,26 @@ public class HomeController {
                 <img src="%s">
                 <hr>
                 <div>업로드 완료</div>
-                """.formatted(getS3FileUrl("img1/" + file.getOriginalFilename()));
+                """.formatted(getS3FileUrl(IMG_DIR_NAME + "/" + file.getOriginalFilename()));
+    }
+
+    @GetMapping("/deleteFile")
+    public String showDeleteFile() {
+        return """
+                <form action="/deleteFile" method="post">
+                    <input type="text" name="fileName">
+                    <input type="submit" value="delete">
+                </form>
+                """;
+    }
+
+    @PostMapping("/deleteFile")
+    @ResponseBody
+    public String deleteFile(String fileName) {
+        // 파일을 S3에서 삭제합니다.
+        amazonS3.deleteObject(BUCKET_NAME, IMG_DIR_NAME + "/" + fileName);
+
+        return "파일이 삭제되었습니다.";
     }
 }
 
